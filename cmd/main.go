@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	log "github.com/cihub/seelog"
 	"github.com/yin-zt/go-tamapl-server/pkg/config"
 	"github.com/yin-zt/go-tamapl-server/pkg/routes"
 	"github.com/yin-zt/go-tamapl-server/pkg/utils/logger"
@@ -23,8 +24,11 @@ var banner = `
 `
 
 func main() {
+	defer log.Flush()
+
 	fmt.Println(banner)
 	logger.Setup()
+	log.ReplaceLogger(logger.ServerLogger)
 
 	r := routes.InitRoutes()
 
@@ -35,22 +39,22 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.ServerLogger.Errorf("listen: %s\n", err)
+			log.Errorf("listen: %s\n", err)
 		}
 	}()
 
-	logger.ServerLogger.Info(fmt.Sprintf("Server is running at  %s:%d/%s", config.GinHost, config.GinPort, config.GinUrlPrefix))
+	log.Info(fmt.Sprintf("Server is running at  %s:%d/%s", config.GinHost, config.GinPort, config.GinUrlPrefix))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	logger.ServerLogger.Info("Shutting down server ...")
+	log.Info("Shutting down server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.ServerLogger.Error("Server forced to shutdown: ", err)
+		log.Error("Server forced to shutdown: ", err)
 	}
-	logger.ServerLogger.Info("Server exiting!")
+	log.Info("Server exiting!")
 
 }
