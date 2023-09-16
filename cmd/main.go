@@ -31,7 +31,6 @@ func main() {
 	logger.Setup()
 	log.ReplaceLogger(logger.ServerLogger)
 	server.Cli.Init("do it")
-	fmt.Println("see it?")
 
 	r := routes.InitRoutes()
 

@@ -2,8 +2,11 @@ package common
 
 import (
 	"fmt"
+	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
+	"github.com/spf13/cast"
+	"github.com/yin-zt/go-tamapl-server/pkg/utils/logger"
 	"net"
 	"strings"
 	"time"
@@ -45,4 +48,37 @@ func (this *Common) InitEngine(c map[string]string) (*xorm.Engine, error) {
 		return nil, er
 	}
 
+}
+
+// 根据配置文件的内容初始化redis pool
+func (this *Common) InitRedisPool(c map[string]interface{}) (*redis.Pool, error) {
+
+	pool := &redis.Pool{
+		MaxIdle:     cast.ToInt(c["maxIdle"]),
+		MaxActive:   cast.ToInt(c["maxActive"]),
+		IdleTimeout: time.Duration(cast.ToInt(c["idleTimeout"])) * time.Second,
+		Wait:        true,
+		Dial: func() (redis.Conn, error) {
+			conn, err := redis.Dial("tcp", cast.ToString(c["address"]),
+				redis.DialConnectTimeout(time.Duration(cast.ToInt(c["connectTimeout"]))*time.Second),
+				redis.DialPassword(cast.ToString(c["pwd"])),
+				redis.DialDatabase(cast.ToInt(c["db"])),
+			)
+			if err != nil {
+				fmt.Println(err)
+				logger.ServerLogger.Error(err)
+			}
+			return conn, err
+
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("ping")
+			if err != nil {
+				logger.ServerLogger.Error(err)
+				return err
+			}
+			return err
+		},
+	}
+	return pool, nil
 }

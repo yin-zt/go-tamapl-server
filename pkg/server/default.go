@@ -51,9 +51,20 @@ type DB struct {
 	Db       string `json:"database"`
 }
 
+type Redis struct {
+	Address        string `json:"address"`
+	Pwd            string `json:"pwd"`
+	MaxIdle        int    `json:"maxIdle"`
+	MaxActive      int    `json:"maxActive"`
+	IdleTimeout    int    `json:"idleTimeout"`
+	ConnectTimeout int    `json:"connectTimeout"`
+	DB             int    `json:"db"`
+}
+
 type ServerConfig struct {
 	Etcd            Etcd          `json:"etcd_root"`
 	EtcdGuest       HeartBeatEtcd `json:"etcd"`
 	Db              DB            `json:"db"`
+	Redis           Redis         `json:"redis"`
 	EtcdValueExpire int           `json:"etcd_value_expire"`
 }

@@ -11,8 +11,7 @@ import (
 
 func (ez *CliServer) Init(action string) {
 	ParseConfig("")
-	fmt.Println(123)
-	ez.InitComponent("test")
+	ez.InitComponent("init")
 }
 
 func (ez *CliServer) InitComponent(action string) {
@@ -53,4 +52,29 @@ func (ez *CliServer) InitComponent(action string) {
 	}
 	Engine = createdEnginer
 	fmt.Println(createdEnginer)
+
+	if config.AutoCreatTable {
+		// 在数据库上创建相应的表
+		if err := Engine.Sync2(new(TChUser), new(TChResults), new(TChHeartbeat),
+			new(TChLog), new(TChResultsHistory), new(TChConfig)); err != nil {
+			logger.ServerLogger.Error(err.Error())
+		}
+	}
+
+	RedisConfigMap := map[string]interface{}{
+		"maxIdle":        Config().Redis.MaxIdle,
+		"maxActive":      Config().Redis.MaxActive,
+		"idleTimeout":    Config().Redis.IdleTimeout,
+		"address":        Config().Redis.Address,
+		"pwd":            Config().Redis.Pwd,
+		"db":             Config().Redis.DB,
+		"connectTimeout": Config().Redis.ConnectTimeout,
+	}
+	redisPool, err := Cli.Util.InitRedisPool(RedisConfigMap)
+	if err != nil {
+		logger.ServerLogger.Error("init redis pool error, go away")
+		resp = "fail to init redis pool"
+		panic(resp)
+	}
+	Cli.Rp = redisPool
 }
