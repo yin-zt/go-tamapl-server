@@ -6,6 +6,7 @@ import (
 	log "github.com/cihub/seelog"
 	"github.com/yin-zt/go-tamapl-server/pkg/config"
 	"github.com/yin-zt/go-tamapl-server/pkg/routes"
+	"github.com/yin-zt/go-tamapl-server/pkg/server"
 	"github.com/yin-zt/go-tamapl-server/pkg/utils/logger"
 	"net/http"
 	"os"
@@ -29,6 +30,8 @@ func main() {
 	fmt.Println(banner)
 	logger.Setup()
 	log.ReplaceLogger(logger.ServerLogger)
+	server.Cli.Init("do it")
+	fmt.Println("see it?")
 
 	r := routes.InitRoutes()
 

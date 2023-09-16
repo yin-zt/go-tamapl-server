@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"net"
 	"strings"
