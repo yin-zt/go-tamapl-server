@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/coreos/etcd/client"
 	"github.com/yin-zt/go-tamapl-server/pkg/config"
+	"github.com/yin-zt/go-tamapl-server/pkg/utils/common"
 	"github.com/yin-zt/go-tamapl-server/pkg/utils/logger"
+	"os"
 	"strings"
 	"time"
 )
@@ -35,6 +37,11 @@ func (ez *CliServer) InitComponent(action string) {
 	}
 	Cli.Kapi = client.NewKeysAPI(c)
 	Cli.EtcdClent = c
+	ez.Etcd_host = Config().Etcd.Host
+	etcdconf := &EtcdConf{User: Config().Etcd.User, Password: Config().Etcd.Pwd}
+	ez.Util = &common.Common{}
+	str := etcdconf.User + ":" + etcdconf.Password
+	ez.Etcdbasicauth = "Basic " + ez.Util.Base64Encode(str)
 
 	DbConfigMap := map[string]string{
 		"dbtype":   Config().Db.Type,
@@ -77,4 +84,24 @@ func (ez *CliServer) InitComponent(action string) {
 		panic(resp)
 	}
 	Cli.Rp = redisPool
+
+	if !ez.Util.IsExist(config.CONST_UPLOAD_DIR) {
+		os.Mkdir(config.CONST_UPLOAD_DIR, 777)
+	}
+
+	// 检查程序中db、etcd、redis服务状态
+	go func() {
+		time.Sleep(time.Second * 2)
+
+		status := Cli.checkstatus()
+
+		logger.ServerLogger.Info(Cli.Util.JsonEncode(status))
+
+		ticker := time.NewTicker(time.Minute)
+		for {
+			ez.ReportStatus()
+			<-ticker.C
+		}
+	}()
+
 }

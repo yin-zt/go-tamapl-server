@@ -1,15 +1,12 @@
 package common
 
 import (
+	"encoding/base64"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
-	"github.com/spf13/cast"
-	"github.com/yin-zt/go-tamapl-server/pkg/utils/logger"
+	jsoniter "github.com/json-iterator/go"
 	"net"
+	"os"
 	"strings"
-	"time"
 )
 
 // GetPulicIP 作用是获取本地IP地址，且需要能与外部DNS 8.8.8.8:80 实现udp通信的
@@ -24,61 +21,34 @@ func (this *Common) GetPulicIP() string {
 	return localAddr[0:idx]
 }
 
-// InitEngine 根据传入的配置信息初始化数据库驱动
-func (this *Common) InitEngine(c map[string]string) (*xorm.Engine, error) {
+// Base64Encode 对输入字符串基于base64进行编码
+func (this *Common) Base64Encode(str string) string {
 
-	url := "%s:%s@tcp(%s:%s)/%s?charset=utf8"
-	url = fmt.Sprintf(url, c["user"], c["password"], c["host"], c["port"], c["db"])
-	dbtype := c["dbtype"]
-
-	fmt.Println(url)
-	fmt.Println(dbtype)
-	//if Config().Debug {
-	//	fmt.Println(url)
-	//	log.Info(url)
-	//}
-
-	_enginer, er := xorm.NewEngine(dbtype, url)
-	if er == nil /*&& this.CheckEnginer(_enginer)*/ {
-		_enginer.SetConnMaxLifetime(time.Duration(60) * time.Second)
-		_enginer.SetMaxIdleConns(0)
-		//		_enginer.ShowSQL(true)
-		return _enginer, nil
-	} else {
-		return nil, er
-	}
-
+	return base64.StdEncoding.EncodeToString([]byte(str))
 }
 
-// 根据配置文件的内容初始化redis pool
-func (this *Common) InitRedisPool(c map[string]interface{}) (*redis.Pool, error) {
+// IsExist 用于判断文件是否存在
+func (this *Common) IsExist(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil || os.IsExist(err)
+}
 
-	pool := &redis.Pool{
-		MaxIdle:     cast.ToInt(c["maxIdle"]),
-		MaxActive:   cast.ToInt(c["maxActive"]),
-		IdleTimeout: time.Duration(cast.ToInt(c["idleTimeout"])) * time.Second,
-		Wait:        true,
-		Dial: func() (redis.Conn, error) {
-			conn, err := redis.Dial("tcp", cast.ToString(c["address"]),
-				redis.DialConnectTimeout(time.Duration(cast.ToInt(c["connectTimeout"]))*time.Second),
-				redis.DialPassword(cast.ToString(c["pwd"])),
-				redis.DialDatabase(cast.ToInt(c["db"])),
-			)
-			if err != nil {
-				fmt.Println(err)
-				logger.ServerLogger.Error(err)
-			}
-			return conn, err
+// JsonEncode 结构体入参转为字符串
+func (this *Common) JsonEncode(v interface{}) string {
 
-		},
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			_, err := c.Do("ping")
-			if err != nil {
-				logger.ServerLogger.Error(err)
-				return err
-			}
-			return err
-		},
+	if v == nil {
+		return ""
 	}
-	return pool, nil
+	vv := map[string]string{"db": "ok", "etcd": "ok", "redis": "ok"}
+	tools := jsoniter.ConfigCompatibleWithStandardLibrary
+	data, _ := tools.Marshal(vv)
+	fmt.Println(data)
+	jbyte, err := json.Marshal(v)
+	fmt.Println(jbyte)
+	if err == nil {
+		return string(jbyte)
+	} else {
+		return ""
+	}
+
 }
