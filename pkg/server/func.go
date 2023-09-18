@@ -14,6 +14,13 @@ import (
 func (ez *CliServer) Init(action string) {
 	ParseConfig("")
 	ez.InitComponent("init")
+	ez.Etcd_host = Config().Etcd.Host
+	etcdConf := &EtcdConf{User: Config().Etcd.User, Password: Config().Etcd.Pwd}
+	ez.Util = &common.Common{}
+	etcdStr := etcdConf.User + ":" + etcdConf.Password
+	ez.Etcdbasicauth = "Basic" + ez.Util.Base64Encode(etcdStr)
+	go Cli.InitEtcd()
+	go Cli.InitUserAdmin()
 }
 
 func (ez *CliServer) InitComponent(action string) {

@@ -1,11 +1,13 @@
 package common
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 )
 
@@ -51,4 +53,29 @@ func (this *Common) JsonEncode(v interface{}) string {
 		return ""
 	}
 
+}
+
+// Contains 方法的作用是判断obj是否被包含在arrayobj中，第二个参数是数组|集合
+func (this *Common) Contains(obj interface{}, arrayobj interface{}) bool {
+	targetValue := reflect.ValueOf(arrayobj)
+	switch reflect.TypeOf(arrayobj).Kind() {
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < targetValue.Len(); i++ {
+			if targetValue.Index(i).Interface() == obj {
+				return true
+			}
+		}
+	case reflect.Map:
+		if targetValue.MapIndex(reflect.ValueOf(obj)).IsValid() {
+			return true
+		}
+	}
+	return false
+}
+
+func (this *Common) MD5(str string) string {
+
+	md := md5.New()
+	md.Write([]byte(str))
+	return fmt.Sprintf("%x", md.Sum(nil))
 }
