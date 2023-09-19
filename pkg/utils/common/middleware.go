@@ -52,7 +52,7 @@ func (this *Common) InitRedisPool(c map[string]interface{}) (*redis.Pool, error)
 			)
 			if err != nil {
 				fmt.Println(err)
-				logger.ServerLogger.Error(err)
+				logger.Error(err)
 			}
 			return conn, err
 
@@ -60,7 +60,7 @@ func (this *Common) InitRedisPool(c map[string]interface{}) (*redis.Pool, error)
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			_, err := c.Do("ping")
 			if err != nil {
-				logger.ServerLogger.Error(err)
+				logger.Error(err)
 				return err
 			}
 			return err

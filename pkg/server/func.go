@@ -20,6 +20,7 @@ func (ez *CliServer) Init(action string) {
 	etcdStr := etcdConf.User + ":" + etcdConf.Password
 	ez.Etcdbasicauth = "Basic" + ez.Util.Base64Encode(etcdStr)
 	go Cli.InitEtcd()
+	fmt.Println("1213")
 	go Cli.InitUserAdmin()
 }
 
@@ -40,7 +41,7 @@ func (ez *CliServer) InitComponent(action string) {
 
 	c, err := client.New(cfg)
 	if err != nil {
-		logger.ServerLogger.Error(err)
+		logger.Error(err)
 	}
 	Cli.Kapi = client.NewKeysAPI(c)
 	Cli.EtcdClent = c
@@ -60,7 +61,7 @@ func (ez *CliServer) InitComponent(action string) {
 	}
 	createdEnginer, err := Cli.Util.InitEngine(DbConfigMap)
 	if err != nil {
-		logger.ServerLogger.Error("init db engine occur error!")
+		logger.Error("init db engine occur error!")
 		resp = "error occur, run !!!"
 		panic(resp)
 	}
@@ -71,7 +72,7 @@ func (ez *CliServer) InitComponent(action string) {
 		// 在数据库上创建相应的表
 		if err := Engine.Sync2(new(TChUser), new(TChResults), new(TChHeartbeat),
 			new(TChLog), new(TChResultsHistory), new(TChConfig)); err != nil {
-			logger.ServerLogger.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	}
 
@@ -86,7 +87,7 @@ func (ez *CliServer) InitComponent(action string) {
 	}
 	redisPool, err := Cli.Util.InitRedisPool(RedisConfigMap)
 	if err != nil {
-		logger.ServerLogger.Error("init redis pool error, go away")
+		logger.Error("init redis pool error, go away")
 		resp = "fail to init redis pool"
 		panic(resp)
 	}
@@ -98,11 +99,11 @@ func (ez *CliServer) InitComponent(action string) {
 
 	// 检查程序中db、etcd、redis服务状态
 	go func() {
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 10)
 
 		status := Cli.checkstatus()
 
-		logger.ServerLogger.Info(Cli.Util.JsonEncode(status))
+		logger.Info(Cli.Util.JsonEncode(status))
 
 		ticker := time.NewTicker(time.Minute)
 		for {

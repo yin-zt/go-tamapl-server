@@ -28,10 +28,15 @@ func main() {
 	defer log.Flush()
 
 	fmt.Println(banner)
-	logger.Setup()
-	log.ReplaceLogger(logger.ServerLogger)
+	logger.Setup(&logger.Settings{
+		Path:       "log",
+		Name:       "go-tamapl-server",
+		Ext:        "log",
+		TimeFormat: "2006-01-02",
+	})
 	server.Cli.Init("do it")
 
+	logger.Info("finish init component !!")
 	r := routes.InitRoutes()
 
 	srv := &http.Server{

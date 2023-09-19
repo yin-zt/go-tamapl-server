@@ -38,8 +38,10 @@ func (ez *CliServer) checkstatus() map[string]string {
 	result := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(val), &result); err != nil {
 		data["etcd"] = "fail"
+		logger.Error("check etcd server error: ", err)
 	}
 
+	logger.Info(result)
 	if val, ok := result["node"]; ok {
 		switch node := val.(type) {
 		case map[string]interface{}:
@@ -67,7 +69,7 @@ func (ez *CliServer) redisDo(action string, args ...interface{}) (reply interfac
 func (ez *CliServer) WriteEtcd(url string, value string, ttl string) (string, error) {
 
 	req := httplib.Post(url)
-
+	logger.Info(ez.Etcdbasicauth)
 	req.Header("Authorization", ez.Etcdbasicauth)
 	req.Param("value", value)
 	req.Param("ttl", ttl)
@@ -75,7 +77,7 @@ func (ez *CliServer) WriteEtcd(url string, value string, ttl string) (string, er
 	str, err := req.String()
 	//	fmt.Println(str)
 	if err != nil {
-		logger.ServerLogger.Error(err)
+		logger.Error(err)
 		print(err)
 	}
 	return str, err
@@ -92,7 +94,7 @@ func (ez *CliServer) ReportStatus() {
 		if re := recover(); re != resp {
 
 			buffer := debug.Stack()
-			logger.ServerLogger.Error(string(buffer))
+			logger.Error(string(buffer))
 		}
 	}()
 
@@ -104,7 +106,7 @@ func (ez *CliServer) ReportStatus() {
 	}
 	fmt.Println("report pl status, attention!")
 
-	logger.ServerLogger.Info(ez.Util.JsonEncode(data))
+	logger.Info(ez.Util.JsonEncode(data))
 
 }
 

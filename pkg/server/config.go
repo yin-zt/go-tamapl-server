@@ -67,5 +67,5 @@ func ParseConfig(filePath string) {
 	//}
 
 	atomic.StorePointer(&ptr, unsafe.Pointer(&c))
-	logger.ServerLogger.Info("config parse success")
+	logger.Info("config parse success")
 }
