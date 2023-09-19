@@ -18,9 +18,24 @@ func (ez *CliServer) Init(action string) {
 	etcdConf := &EtcdConf{User: Config().Etcd.User, Password: Config().Etcd.Pwd}
 	ez.Util = &common.Common{}
 	etcdStr := etcdConf.User + ":" + etcdConf.Password
-	ez.Etcdbasicauth = "Basic" + ez.Util.Base64Encode(etcdStr)
+	ez.Etcdbasicauth = "Basic " + ez.Util.Base64Encode(etcdStr)
 	go Cli.InitEtcd()
 	fmt.Println("1213")
+
+	// 检查程序中db、etcd、redis服务状态
+	go func() {
+		time.Sleep(time.Second * 10)
+
+		status := Cli.checkstatus()
+
+		logger.Info(Cli.Util.JsonEncode(status))
+
+		ticker := time.NewTicker(time.Minute)
+		for {
+			ez.ReportStatus()
+			<-ticker.C
+		}
+	}()
 	go Cli.InitUserAdmin()
 }
 
@@ -96,20 +111,5 @@ func (ez *CliServer) InitComponent(action string) {
 	if !ez.Util.IsExist(config.CONST_UPLOAD_DIR) {
 		os.Mkdir(config.CONST_UPLOAD_DIR, 777)
 	}
-
-	// 检查程序中db、etcd、redis服务状态
-	go func() {
-		time.Sleep(time.Second * 10)
-
-		status := Cli.checkstatus()
-
-		logger.Info(Cli.Util.JsonEncode(status))
-
-		ticker := time.NewTicker(time.Minute)
-		for {
-			ez.ReportStatus()
-			<-ticker.C
-		}
-	}()
 
 }
